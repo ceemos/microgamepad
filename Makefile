@@ -9,8 +9,8 @@
 
 DEVICE  = attiny45
 F_CPU   = 16500000UL	# in Hz
-FUSE_L  = 0xe1
-FUSE_H  = 0xdd
+FUSE_L  = 0b11100001
+FUSE_H  = 0b11011101
 AVRDUDE = avrdude -c ponyser -P /dev/ttyS0 -p $(DEVICE) # edit this line for your programmer
 
 CFLAGS  = --std=gnu99 -Iusbdrv -I. -DDEBUG_LEVEL=0
@@ -168,3 +168,5 @@ disasm:	main.elf
 
 cpp:
 	$(COMPILE) -E main.c
+
+lss:	main.lss
