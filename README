@@ -1,0 +1,12 @@
+Sony (-Ercisson) stopped shipping joystick buttons with their Android phones, so a USB alternative was needed.
+
+Microgamepad is a recycled joystick button with a USB-Interface to plug into an Android smartphone as a replacement for a phyiscal DPad or Trackball.
+
+The USB-Interface is implementet on an ATTiny44 with obdev's great VUSB. The actual implementation is based on Flip's 4-key-Keyboard. 
+
+[1] http://www.obdev.at/products/vusb/index.html
+[2] http://blog.flipwork.nl/?x=entry:entry100224-003937
+
+The software was adapted to to read the 4 buttons of the joystick button with only 3 IO-Pins to keep the RESET pin working.
+
+The oscillator calibration routine used by Flip's software however seems broken, at least for the 3,3V design (tries frequencies that make the oscillator stop) so it was replaced by a fixed, hand-tuned value (not optimal).
