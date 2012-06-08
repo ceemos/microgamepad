@@ -167,7 +167,7 @@ static void buildReport(void){
 
 
         if (buttonChanged_B2 == 1){
-            if (buttonState_B2 != 0){ // if button 2 is pressed
+            if (buttonState_B2 == 0){ // if button 2 is pressed
                 key = 0; //button released event
             } 
             else {
@@ -177,7 +177,7 @@ static void buildReport(void){
             reportBuffer[3] = key;
         }
         if(buttonChanged_B3 == 1){
-            if (buttonState_B3 != 0){ // if button 3 is pressed
+            if (buttonState_B3 == 0){ // if button 3 is pressed
                 key = 0; //button released event
             } 
             else {
@@ -187,7 +187,7 @@ static void buildReport(void){
             reportBuffer[4] = key;
         }
         if(buttonChanged_B4 == 1){
-            if (buttonState_B4 != 0){ // if button 4 is pressed
+            if (buttonState_B4 == 0){ // if button 4 is pressed
                 key = 0; //button released event
             } 
             else {
@@ -197,11 +197,11 @@ static void buildReport(void){
             reportBuffer[5] = key;
         }
         if(buttonChanged_B5 == 1){
-            if (buttonState_B5 != 0){ // if button 4 is pressed
+            if (buttonState_B5 == 0){ // if button 5 is pressed
                 key = 0; //button released event
             } 
             else {
-                key = 34;  // key = '4'
+                key = 34;  // key = '5'
             }
             buttonChanged_B5 = 0;
             reportBuffer[6] = key;
@@ -213,7 +213,7 @@ static void buildReport(void){
 
 static void checkButtonChange(void) {
     
-    uchar tempButtonValue_B1 = bit_is_set(BUTTON_PIN_B1, BUTTON_BIT_B1); //status of switch is stored in tempButtonValue 
+    uchar tempButtonValue_B1 = !bit_is_set(BUTTON_PIN_B1, BUTTON_BIT_B1); //status of switch is stored in tempButtonValue 
     
     ADMUX &= ~(1 << MUX0); // First button pair
     ADCSRA |= 1 << ADSC; 
@@ -234,6 +234,7 @@ static void checkButtonChange(void) {
     
     uchar tempButtonValue_B4 = tempButtonValue_B45 < 30;
     uchar tempButtonValue_B5 = !tempButtonValue_B4 && tempButtonValue_B45 < 200;
+    
     
 
     if (tempButtonValue_B1 != buttonState_B1){ //if status has changed
@@ -264,7 +265,7 @@ static void checkButtonChange(void) {
         buttonState_B5 = tempButtonValue_B5;    // change buttonState to new state
         debounceTimeIsOver = 0;    // debounce timer starts
         newReport = 0; // initiate new report 
-        buttonChanged_B4 = 1;
+        buttonChanged_B5 = 1;
     }
 
 }
