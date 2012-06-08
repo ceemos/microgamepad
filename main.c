@@ -142,10 +142,14 @@ static void timerPoll(void)
 
     if(TIFR & (1 << TOV1)){
         TIFR = (1 << TOV1); /* clear overflow */
-        if(++timerCnt >= 5){       // 5/63 sec delay for switch debouncing
-            timerCnt = 0;
-            debounceTimeIsOver = 1; 
+        if(!debounceTimeIsOver) {
+            timerCnt++;
+            if(timerCnt >= 5){       // 5/63 sec delay for switch debouncing
+                timerCnt = 0;
+                debounceTimeIsOver = 1; 
+            }
         }
+        
     }
 }
 
@@ -155,7 +159,7 @@ static void buildReport(void){
 
     if(newReport == 0){    
         if (buttonChanged_B1 == 1){
-            if (buttonState_B1 != 0){ // if button 1 is released
+            if (buttonState_B1 == 0){ // if button 1 is released
                 key = 0; //button released event
             } 
             else { //if button 1 is pressed
@@ -214,28 +218,47 @@ static void buildReport(void){
 static void checkButtonChange(void) {
     
     uchar tempButtonValue_B1 = !bit_is_set(BUTTON_PIN_B1, BUTTON_BIT_B1); //status of switch is stored in tempButtonValue 
-    
-    ADMUX &= ~(1 << MUX0); // First button pair
-    ADCSRA |= 1 << ADSC; 
-    while(ADCSRA & (1<<ADSC)); // wait for conversion
-    uchar tempButtonValue_B23 = (ADCW >> 8);
-    ADMUX |= 1 << MUX0; // Second button pair
-    ADCSRA |= 1 << ADSC; 
-    while(ADCSRA & (1<<ADSC)); // wait for conversion
-    uchar tempButtonValue_B45 = ADCH;
-    
-    eeprom_write_byte(2, tempButtonValue_B23);
-    eeprom_write_byte(3, tempButtonValue_B45);
-    eeprom_write_byte(4, 0x46);
 
-    
-    uchar tempButtonValue_B2 = tempButtonValue_B23 < 30;
-    uchar tempButtonValue_B3 = !tempButtonValue_B2 && tempButtonValue_B23 < 200;
-    
-    uchar tempButtonValue_B4 = tempButtonValue_B45 < 30;
-    uchar tempButtonValue_B5 = !tempButtonValue_B4 && tempButtonValue_B45 < 200;
+    uchar tempButtonValue_B2 = 0;
+    uchar tempButtonValue_B3 = 0;
+    uchar tempButtonValue_B4 = 0;
+    uchar tempButtonValue_B5 = 0;
     
     
+    if (!buttonState_B1) { // dont read directions when middle Button is pressed
+        // Pull button 1 Pin low to enable the other buttons
+        PORTB &= ~(1 << BUTTON_BIT_B1);
+        DDRB  |=   1 << BUTTON_BIT_B1; 
+        
+        ADMUX &= ~(1 << MUX0); // First button pair
+        ADCSRA |= 1 << ADSC; 
+        while(ADCSRA & (1<<ADSC)); // wait for conversion
+        uchar tempButtonValue_B23 = (ADCW >> 8);
+        ADMUX |= 1 << MUX0; // Second button pair
+        ADCSRA |= 1 << ADSC; 
+        while(ADCSRA & (1<<ADSC)); // wait for conversion
+        uchar tempButtonValue_B45 = ADCH;
+        
+        // Set Button 1 Pin input again
+        DDRB  &= ~(1 << BUTTON_BIT_B1); 
+        PORTB |=   1 << BUTTON_BIT_B1;
+        
+        tempButtonValue_B2 = tempButtonValue_B23 < 30;
+        tempButtonValue_B3 = !tempButtonValue_B2 && tempButtonValue_B23 < 200;
+        
+        tempButtonValue_B4 = tempButtonValue_B45 < 30;
+        tempButtonValue_B5 = !tempButtonValue_B4 && tempButtonValue_B45 < 200;
+        
+        // ignore middle button when directions were pressed
+        tempButtonValue_B1 = tempButtonValue_B1 && !(tempButtonValue_B2 || tempButtonValue_B3 || tempButtonValue_B4 || tempButtonValue_B5); 
+    }
+    
+    // Special debouncing
+    tempButtonValue_B1 = tempButtonValue_B1 && !(buttonState_B2 || buttonState_B3 || buttonState_B4 || buttonState_B5);
+    tempButtonValue_B2 = tempButtonValue_B2 && !buttonState_B3;
+    tempButtonValue_B3 = tempButtonValue_B3 && !buttonState_B2;
+    tempButtonValue_B4 = tempButtonValue_B4 && !buttonState_B5;
+    tempButtonValue_B5 = tempButtonValue_B5 && !buttonState_B4;
 
     if (tempButtonValue_B1 != buttonState_B1){ //if status has changed
         buttonState_B1 = tempButtonValue_B1;    // change buttonState to new state
