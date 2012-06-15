@@ -1,30 +1,15 @@
 /* Name: main.c
- * Project: 4-Key-Keyboard
- * Author: Flip van den Berg - www.flipwork.nl
- * Creation Date: February 2010
+ * Project: mircogamepad (based on: 4-Key-Keyboard)
+ * Author: Marcel Schneider, Flip van den Berg - www.flipwork.nl
  * Based on V-USB drivers from Objective Developments - http://www.obdev.at/products/vusb/index.html
  */
 
-
-/*
-
-IMPORTANT:     This project uses fuse settings that disable the reset pin in order to use it as an IO pin.
-            This means that if you can only re-program the AVR afterwards using High Voltage Serial Programming (HVSP)
-
-            If you have a programmer that only supports ISP make sure to upload the firmware before setting the reset-disable fuse!
-
-Working fuse setting on ATTiny45/85:
-
-EXTENDED: 0xFF
-HIGH:     0x5F
-LOW:      0xC1
-
-*/
-
+// makes KDevelop more happy
 #ifndef F_CPU
 #  define F_CPU
 #  include <avr/iotn45.h>
 #endif
+
 #include <avr/io.h>
 #include <avr/wdt.h>
 #include <avr/eeprom.h>
@@ -40,9 +25,9 @@ LOW:      0xC1
 #define BUTTON_BIT_B1 PB1          /* bit for BUTTON 1 input/output */
 
 #define BUTTON_PORT_B23 PORTB      /* PORTx - register for BUTTON 2+3 output */
-#define BUTTON_BIT_B23 PB4         /* bit for BUTTON 1 input/output */
+#define BUTTON_BIT_B23 PB4         /* bit for BUTTON 2+3 input/output */
 #define BUTTON_PORT_B45 PORTB      /* PORTx - register for BUTTON 4+5 output */
-#define BUTTON_BIT_B45 PB3         /* bit for BUTTON 1 input/output */
+#define BUTTON_BIT_B45 PB3         /* bit for BUTTON 4+5 input/output */
 
 /* ------------------------------------------------------------------------- */
 
@@ -168,8 +153,6 @@ static void buildReport(void){
             buttonChanged_B1 = 0;
             reportBuffer[2] = key;
         }
-
-
         if (buttonChanged_B2 == 1){
             if (buttonState_B2 == 0){ // if button 2 is pressed
                 key = 0; //button released event
@@ -302,7 +285,7 @@ static void timerInit(void)
 
 static void adcInit(void)
 {
-    // ADMUX &= ~ (1 << REFS0 | 1 << REFS1 | 1 << REFS2);  // Vcc as voltege reference
+    // ADMUX &= ~ (1 << REFS0 | 1 << REFS1 | 1 << REFS2);  // Vcc as voltage reference
     ADMUX  |= 1 << ADLAR; // left adjust result -- easier for 8-bit
     ADMUX  |= 1 << MUX1 | 0 << MUX2 | 0 << MUX3; // PB3 or PB4 depending on MUX
     ADCSRA |= 1 << ADEN; // Turn on ADC
@@ -311,9 +294,9 @@ static void adcInit(void)
     
 }
 
-/* -------------------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------- */
 /* ------------------------ interface to USB driver ------------------------ */
-/* -------------------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------- */
 
 uchar    usbFunctionSetup(uchar data[8])
 {
